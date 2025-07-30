@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Settings, LogOut, ArrowLeft, Calculator, Percent, Users } from "lucide-react";
+import { ClipboardList, Settings, LogOut, ArrowLeft, Calculator, Percent, Users, Truck } from "lucide-react";
 import {
   Card,
   CardContent,
