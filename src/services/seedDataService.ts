@@ -1,4 +1,4 @@
-// src/services/seedDataService.ts (ou onde você preferir colocar sua lógica de seed)
+// src/services/seedDataService.ts
 
 import { supabase } from "@/lib/supabaseClient";
 import { v4 as uuidv4 } from 'uuid';
@@ -6,51 +6,36 @@ import {
   categories as localCategories,
   variations as localVariations,
   menuItems as localMenuItems,
-  // recheioGroup e burritoGroup são objetos, não arrays exportados diretamente,
-  // vamos precisar referenciá-los pelo nome.
-} from "@/data/menuData";
+  adicionaisLancheGroup, // AGORA IMPORTAMOS APENAS O GRUPO SIMPLIFICADO
+} from "@/data/menuData"; // Verifique se o caminho está correto
 
 // Defina o ID da empresa para associar os dados
 const EMPRESA_ID = "67ac5adf-02a7-4c22-8ec3-68c463323e35";
 
-// Funções auxiliares para gerar IDs e mapear dados
-interface LocalCategory { id: string; name: string; order: number; }
-interface LocalVariation { id: string; name: string; available: boolean; categoryIds: string[]; }
-interface LocalVariationGroup {
-  id: string; name: string; minRequired: number; maxAllowed: number;
-  variations: string[]; // IDs das variações
-  customMessage: string;
-}
-interface LocalMenuItem {
-  id: string; name: string; description: string; price: number;
-  image: string; category: string; popular?: boolean;
-  hasVariations?: boolean; variationGroups?: LocalVariationGroup[];
-}
-
 // Mapa para armazenar os IDs gerados e manter as relações
 const generatedIds = {
-  categories: new Map<string, string>(), // oldId -> newUuid
-  variations: new Map<string, string>(), // oldId -> newUuid
-  variationGroups: new Map<string, string>(), // oldId -> newUuid
-  menuItems: new Map<string, string>(), // oldId -> newUuid
+  categories: new Map<string, string>(),
+  variations: new Map<string, string>(),
+  variationGroups: new Map<string, string>(),
+  menuItems: new Map<string, string>(),
 };
 
 export const seedSupabaseData = async () => {
   console.log("Iniciando processo de seed data para o Supabase...");
 
   try {
-    // 1. Limpar tabelas existentes (cuidado ao usar em produção!)
-    // A ordem de deleção é inversa à de inserção devido às chaves estrangeiras.
-    await supabase.from('item_variation_groups').delete().eq('menu_item_id', EMPRESA_ID); // dummy condition for now, will fail
-    await supabase.from('group_variations').delete().eq('variation_group_id', EMPRESA_ID); // dummy condition
+    // 1. Limpar tabelas existentes (CUIDADO AO USAR EM PRODUÇÃO!)
+    console.log("Tentando limpar dados existentes para empresa_id:", EMPRESA_ID);
+    // Note que essas deleções agora podem ser menos problemáticas com o RLS desativado
+    // e com o CASCADE configurado nas chaves estrangeiras se você tiver
+    // (não adicionamos CASCADE nos scripts de CREATE TABLE anteriores, mas é uma boa prática para deleções).
+    await supabase.from('item_variation_groups').delete().eq('empresa_id', EMPRESA_ID);
+    await supabase.from('group_variations').delete().eq('empresa_id', EMPRESA_ID);
     await supabase.from('menu_items').delete().eq('empresa_id', EMPRESA_ID);
     await supabase.from('variation_groups').delete().eq('empresa_id', EMPRESA_ID);
     await supabase.from('variations').delete().eq('empresa_id', EMPRESA_ID);
     await supabase.from('categories').delete().eq('empresa_id', EMPRESA_ID);
-    console.log("Tabelas limpas para o empresa_id:", EMPRESA_ID);
-    // Nota: As operações de delete acima precisarão de RLS para funcionar por empresa_id.
-    // Para um seed inicial sem RLS configurado, você pode precisar de 'TRUNCATE TABLE' se tiver permissão,
-    // ou apenas inserir sem limpar se o banco estiver vazio.
+    console.log("Dados limpos para o empresa_id:", EMPRESA_ID);
 
     // 2. Inserir Categorias
     const categoriesToInsert = localCategories.map(cat => {
@@ -59,7 +44,7 @@ export const seedSupabaseData = async () => {
       return {
         id: newId,
         name: cat.name,
-        display_order: String(cat.order), // Converter number para string
+        display_order: String(cat.order),
         empresa_id: EMPRESA_ID,
       };
     });
@@ -78,8 +63,8 @@ export const seedSupabaseData = async () => {
       return {
         id: newId,
         name: variation.name,
-        price_adjustment: variation.price_adjustment || 0, // Adicionar se não existir no menuData.ts
-        is_available: variation.available, // Usar o campo 'available'
+        price_adjustment: variation.price_adjustment ?? 0,
+        is_available: variation.available,
         empresa_id: EMPRESA_ID,
       };
     });
@@ -92,11 +77,8 @@ export const seedSupabaseData = async () => {
     console.log("Variações inseridas:", insertedVariations?.length);
 
     // 4. Inserir Grupos de Variação
-    // Precisamos acessar os objetos recheioGroup e burritoGroup diretamente
-    const localVariationGroups: LocalVariationGroup[] = [
-      (await import("@/data/menuData")).recheioGroup,
-      (await import("@/data/menuData")).burritoGroup,
-    ];
+    // Usamos o grupo simplificado diretamente
+    const localVariationGroups = [adicionaisLancheGroup];
 
     const variationGroupsToInsert = localVariationGroups.map(group => {
       const newId = uuidv4();
@@ -122,8 +104,14 @@ export const seedSupabaseData = async () => {
       const newId = uuidv4();
       generatedIds.menuItems.set(item.id, newId);
 
-      // Determinar is_base_price_included
-      const isBasePriceIncluded = !(item.name.includes("Combo 3 Tacos") || item.name.includes("Combo 2 Burritos"));
+      // A lógica para is_base_price_included pode ser simplificada para este único item
+      const isBasePriceIncluded = !(item.hasVariations && item.variationGroups && item.variationGroups.length > 0);
+
+      const categoryUUID = generatedIds.categories.get(item.category);
+      if (!categoryUUID) {
+        console.error(`Categoria "${item.category}" não encontrada no mapa de IDs gerados para o item:`, item);
+        throw new Error(`Erro de Seed Data: Categoria com ID local "${item.category}" não encontrada.`);
+      }
 
       return {
         id: newId,
@@ -131,10 +119,10 @@ export const seedSupabaseData = async () => {
         description: item.description,
         price: item.price,
         image_url: item.image,
-        category_id: generatedIds.categories.get(item.category), // Usar o novo UUID da categoria
+        category_id: categoryUUID,
         is_base_price_included: isBasePriceIncluded,
-        is_available: true, // Por padrão, itens do seed estão disponíveis
-        is_popular: !!item.popular, // Mapear o campo popular
+        is_available: true,
+        is_popular: !!item.popular,
         empresa_id: EMPRESA_ID,
       };
     });
@@ -147,7 +135,7 @@ export const seedSupabaseData = async () => {
     console.log("Itens do Menu inseridos:", insertedMenuItems?.length);
 
     // 6. Popular as Tabelas de Junção
-    const groupVariationsInserts: Array<{ variation_group_id: string; variation_id: string }> = [];
+    const groupVariationsInserts: Array<{ variation_group_id: string; variation_id: string; empresa_id: string }> = [];
     localVariationGroups.forEach(group => {
       const newGroupId = generatedIds.variationGroups.get(group.id);
       if (newGroupId) {
@@ -157,6 +145,7 @@ export const seedSupabaseData = async () => {
             groupVariationsInserts.push({
               variation_group_id: newGroupId,
               variation_id: newVarId,
+              empresa_id: EMPRESA_ID,
             });
           }
         });
@@ -169,7 +158,7 @@ export const seedSupabaseData = async () => {
       console.log("Relações group_variations inseridas:", groupVariationsInserts.length);
     }
 
-    const itemVariationGroupsInserts: Array<{ menu_item_id: string; variation_group_id: string }> = [];
+    const itemVariationGroupsInserts: Array<{ menu_item_id: string; variation_group_id: string; empresa_id: string }> = [];
     localMenuItems.forEach(item => {
       if (item.hasVariations && item.variationGroups) {
         const newMenuItemId = generatedIds.menuItems.get(item.id);
@@ -180,6 +169,7 @@ export const seedSupabaseData = async () => {
               itemVariationGroupsInserts.push({
                 menu_item_id: newMenuItemId,
                 variation_group_id: newGroupId,
+                empresa_id: EMPRESA_ID,
               });
             }
           });
