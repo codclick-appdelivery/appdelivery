@@ -1,73 +1,40 @@
-
-import React, { useState } from "react";
+// src/components/admin/SeedDataButton.tsx (exemplo de adaptação)
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Database, Loader2 } from "lucide-react";
-import { seedAllData } from "@/utils/seedFirebase";
+import { seedSupabaseData } from "@/services/seedDataService"; // Importe a função
 
 export const SeedDataButton = () => {
   const { toast } = useToast();
-  const [isSeeding, setIsSeeding] = useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleSeedData = async () => {
-    if (!window.confirm(
-      "Isso irá LIMPAR todas as coleções existentes e recriar com dados iniciais.\n\n" +
-      "ATENÇÃO: Todos os dados atuais serão perdidos!\n\n" +
-      "Tem certeza que deseja continuar?"
-    )) {
-      return;
-    }
-
-    try {
-      setIsSeeding(true);
-      
-      toast({
-        title: "Iniciando...",
-        description: "Limpando e recriando coleções do Firebase...",
-      });
-
-      const result = await seedAllData();
-      
-      toast({
-        title: "Sucesso!",
-        description: result.message,
-      });
-      
-      // Recarregar a página após 2 segundos para atualizar os dados
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-      
-    } catch (error) {
-      console.error("Erro ao recriar coleções:", error);
-      toast({
-        title: "Erro",
-        description: `Não foi possível recriar as coleções: ${error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSeeding(false);
+    if (window.confirm("Isso irá importar os dados iniciais do cardápio para o Supabase e limpar os dados existentes da empresa atual. Deseja continuar?")) {
+      setIsLoading(true);
+      try {
+        await seedSupabaseData(); // Chama a função de seed
+        toast({
+          title: "Sucesso!",
+          description: "Dados iniciais importados com sucesso para o Supabase.",
+        });
+        // Você pode querer recarregar os dados na página de admin aqui
+        // onDataChange?.(); // Se seu SeedDataButton puder receber um prop onDataChange
+      } catch (error) {
+        console.error("Erro ao importar dados iniciais:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível importar os dados iniciais. Verifique o console.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   return (
-    <Button 
-      onClick={handleSeedData} 
-      disabled={isSeeding}
-      variant="outline"
-      className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-    >
-      {isSeeding ? (
-        <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Recriando...
-        </>
-      ) : (
-        <>
-          <Database className="h-4 w-4 mr-2" />
-          Recriar Coleções Firebase
-        </>
-      )}
+    <Button onClick={handleSeedData} disabled={isLoading} className="w-full sm:w-auto text-sm">
+      {isLoading ? "Importando..." : "Importar Dados Iniciais Supabase"}
     </Button>
   );
 };

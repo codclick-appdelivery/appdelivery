@@ -1,0 +1,481 @@
+warning: in the working copy of 'src/data/menuData.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/Admin.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/AdminDashboard.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/components/admin/SeedDataButton.tsx b/src/components/admin/SeedDataButton.tsx[m
+[1mindex a34eda4..5815509 100644[m
+[1m--- a/src/components/admin/SeedDataButton.tsx[m
+[1m+++ b/src/components/admin/SeedDataButton.tsx[m
+[36m@@ -1,73 +1,40 @@[m
+[31m-[m
+[31m-import React, { useState } from "react";[m
+[32m+[m[32m// src/components/admin/SeedDataButton.tsx (exemplo de adaptação)[m
+[32m+[m[32mimport React from 'react';[m
+ import { Button } from "@/components/ui/button";[m
+ import { useToast } from "@/hooks/use-toast";[m
+[31m-import { Database, Loader2 } from "lucide-react";[m
+[31m-import { seedAllData } from "@/utils/seedFirebase";[m
+[32m+[m[32mimport { seedSupabaseData } from "@/services/seedDataService"; // Importe a função[m
+ [m
+ export const SeedDataButton = () => {[m
+   const { toast } = useToast();[m
+[31m-  const [isSeeding, setIsSeeding] = useState(false);[m
+[32m+[m[32m  const [isLoading, setIsLoading] = React.useState(false);[m
+ [m
+   const handleSeedData = async () => {[m
+[31m-    if (!window.confirm([m
+[31m-      "Isso irá LIMPAR todas as coleções existentes e recriar com dados iniciais.\n\n" +[m
+[31m-      "ATENÇÃO: Todos os dados atuais serão perdidos!\n\n" +[m
+[31m-      "Tem certeza que deseja continuar?"[m
+[31m-    )) {[m
+[31m-      return;[m
+[31m-    }[m
+[31m-[m
+[31m-    try {[m
+[31m-      setIsSeeding(true);[m
+[31m-      [m
+[31m-      toast({[m
+[31m-        title: "Iniciando...",[m
+[31m-        description: "Limpando e recriando coleções do Firebase...",[m
+[31m-      });[m
+[31m-[m
+[31m-      const result = await seedAllData();[m
+[31m-      [m
+[31m-      toast({[m
+[31m-        title: "Sucesso!",[m
+[31m-        description: result.message,[m
+[31m-      });[m
+[31m-      [m
+[31m-      // Recarregar a página após 2 segundos para atualizar os dados[m
+[31m-      setTimeout(() => {[m
+[31m-        window.location.reload();[m
+[31m-      }, 2000);[m
+[31m-      [m
+[31m-    } catch (error) {[m
+[31m-      console.error("Erro ao recriar coleções:", error);[m
+[31m-      toast({[m
+[31m-        title: "Erro",[m
+[31m-        description: `Não foi possível recriar as coleções: ${error.message}`,[m
+[31m-        variant: "destructive",[m
+[31m-      });[m
+[31m-    } finally {[m
+[31m-      setIsSeeding(false);[m
+[32m+[m[32m    if (window.confirm("Isso irá importar os dados iniciais do cardápio para o Supabase e limpar os dados existentes da empresa atual. Deseja continuar?")) {[m
+[32m+[m[32m      setIsLoading(true);[m
+[32m+[m[32m      try {[m
+[32m+[m[32m        await seedSupabaseData(); // Chama a função de seed[m
+[32m+[m[32m        toast({[m
+[32m+[m[32m          title: "Sucesso!",[m
+[32m+[m[32m          description: "Dados iniciais importados com sucesso para o Supabase.",[m
+[32m+[m[32m        });[m
+[32m+[m[32m        // Você pode querer recarregar os dados na página de admin aqui[m
+[32m+[m[32m        // onDataChange?.(); // Se seu SeedDataButton puder receber um prop onDataChange[m
+[32m+[m[32m      } catch (error) {[m
+[32m+[m[32m        console.error("Erro ao importar dados iniciais:", error);[m
+[32m+[m[32m        toast({[m
+[32m+[m[32m          title: "Erro",[m
+[32m+[m[32m          description: "Não foi possível importar os dados iniciais. Verifique o console.",[m
+[32m+[m[32m          variant: "destructive",[m
+[32m+[m[32m        });[m
+[32m+[m[32m      } finally {[m
+[32m+[m[32m        setIsLoading(false);[m
+[32m+[m[32m      }[m
+     }[m
+   };[m
+ [m
+   return ([m
+[31m-    <Button [m
+[31m-      onClick={handleSeedData} [m
+[31m-      disabled={isSeeding}[m
+[31m-      variant="outline"[m
+[31m-      className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"[m
+[31m-    >[m
+[31m-      {isSeeding ? ([m
+[31m-        <>[m
+[31m-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />[m
+[31m-          Recriando...[m
+[31m-        </>[m
+[31m-      ) : ([m
+[31m-        <>[m
+[31m-          <Database className="h-4 w-4 mr-2" />[m
+[31m-          Recriar Coleções Firebase[m
+[31m-        </>[m
+[31m-      )}[m
+[32m+[m[32m    <Button onClick={handleSeedData} disabled={isLoading} className="w-full sm:w-auto text-sm">[m
+[32m+[m[32m      {isLoading ? "Importando..." : "Importar Dados Iniciais Supabase"}[m
+     </Button>[m
+   );[m
+[31m-};[m
+[32m+[m[32m};[m
+\ No newline at end of file[m
+[1mdiff --git a/src/pages/Admin.tsx b/src/pages/Admin.tsx[m
+[1mindex c7977b8..c84b247 100644[m
+[1m--- a/src/pages/Admin.tsx[m
+[1m+++ b/src/pages/Admin.tsx[m
+[36m@@ -1,11 +1,11 @@[m
+[31m-[m
+[32m+[m[32m// Admin.tsx[m
+ import React, { useState, useEffect } from "react";[m
+ import { useNavigate } from "react-router-dom";[m
+ import { useAuth } from "@/hooks/useAuth";[m
+[31m-import { getAllMenuItems } from "@/services/menuItemService";[m
+[31m-import { getAllCategories } from "@/services/categoryService";[m
+[31m-import { getAllVariations } from "@/services/variationService";[m
+[31m-import { getAllVariationGroups } from "@/services/variationGroupService";[m
+[32m+[m[32mimport { getAllMenuItems } from "@/services/menuItemService"; // A ser atualizado para Supabase[m
+[32m+[m[32mimport { getAllCategories } from "@/services/categoryService"; // A ser atualizado para Supabase[m
+[32m+[m[32mimport { getAllVariations } from "@/services/variationService"; // A ser atualizado para Supabase[m
+[32m+[m[32mimport { getAllVariationGroups } from "@/services/variationGroupService"; // A ser atualizado para Supabase[m
+ import { MenuItem, Category, Variation, VariationGroup } from "@/types/menu";[m
+ import { Button } from "@/components/ui/button";[m
+ import { useToast } from "@/hooks/use-toast";[m
+[36m@@ -15,7 +15,7 @@[m [mimport { CategoriesTab } from "@/components/admin/CategoriesTab";[m
+ import { VariationsTab } from "@/components/admin/VariationsTab";[m
+ import { VariationGroupsTab } from "@/components/admin/VariationGroupsTab";[m
+ import { Database } from "lucide-react";[m
+[31m-import { SeedDataButton } from "@/components/admin/SeedDataButton";[m
+[32m+[m[32mimport { SeedDataButton } from "@/components/admin/SeedDataButton"; // O NOVO SeedDataButton[m
+ import { categories as localCategories, menuItems as localMenuItems } from "@/data/menuData";[m
+ [m
+ const Admin = () => {[m
+[36m@@ -29,42 +29,71 @@[m [mconst Admin = () => {[m
+   const [loading, setLoading] = useState<boolean>(true);[m
+   const [activeTab, setActiveTab] = useState<string>("menu");[m
+ [m
+[32m+[m[32m  // TODO: Obter o empresa_id do currentUser quando a autenticação for adaptada para Supabase[m
+[32m+[m[32m  // Por enquanto, usaremos um placeholder ou o ID fixo para testes.[m
+[32m+[m[32m  // Uma vez que o Supabase auth for integrado, currentUser.empresa_id estará disponível.[m
+[32m+[m[32m  const empresaId = currentUser?.empresaId; // ou o ID fixo de teste: "67ac5adf-02a7-4c22-8ec3-68c463323e35";[m
+[32m+[m
+   useEffect(() => {[m
+[32m+[m[32m    // Apenas redirecione se não houver currentUser E não estivermos em modo de desenvolvimento/seed[m
+[32m+[m[32m    // Ou se a rota de login for a esperada[m
+     if (!currentUser) {[m
+       navigate("/login");[m
+       return;[m
+     }[m
+ [m
+[31m-    loadData();[m
+[31m-  }, [currentUser, navigate]);[m
+[32m+[m[32m    // Se tivermos um currentUser, e ele tiver um empresaId, carregamos os dados[m
+[32m+[m[32m    if (currentUser && empresaId) {[m
+[32m+[m[32m      loadData();[m
+[32m+[m[32m    } else {[m
+[32m+[m[32m      // Caso não haja empresaId no currentUser (ainda não migrado auth),[m
+[32m+[m[32m      // podemos decidir o que fazer: mostrar uma mensagem, carregar dados locais, etc.[m
+[32m+[m[32m      console.warn("Nenhum empresaId encontrado para o usuário atual. Dados podem não ser carregados.");[m
+[32m+[m[32m      setLoading(false); // Para não ficar em loop de carregamento[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }, [currentUser, navigate, empresaId]); // Adicionar empresaId como dependência[m
+ [m
+   const loadData = async () => {[m
+[32m+[m[32m    // Garantir que temos um empresaId antes de carregar[m
+[32m+[m[32m    if (!empresaId) {[m
+[32m+[m[32m      console.error("Não foi possível carregar os dados: empresaId não disponível.");[m
+[32m+[m[32m      setLoading(false);[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m
+     try {[m
+       setLoading(true);[m
+       console.log("=== ADMIN: CARREGANDO DADOS ===");[m
+[31m-      console.log("Admin: Loading menu data...");[m
+[31m-      [m
+[31m-      // Load data with local fallbacks[m
+[32m+[m[32m      console.log("Admin: Loading menu data for empresaId:", empresaId);[m
+[32m+[m
+[32m+[m[32m      // As funções getAll... precisarão ser atualizadas para aceitar empresaId[m
+[32m+[m[32m      // e usar o Supabase. Por enquanto, a chamada é compatível com o mock.[m
+       const [items, cats, vars, groups] = await Promise.all([[m
+[31m-        getAllMenuItems().catch(() => {[m
+[32m+[m[32m        getAllMenuItems(empresaId).catch((error) => { // Passa empresaId[m
+[32m+[m[32m          console.error("Erro ao buscar menu items do Supabase:", error);[m
+           console.log("Using local menu items as fallback");[m
+           return localMenuItems;[m
+         }),[m
+[31m-        getAllCategories().catch(() => {[m
+[32m+[m[32m        getAllCategories(empresaId).catch((error) => { // Passa empresaId[m
+[32m+[m[32m          console.error("Erro ao buscar categorias do Supabase:", error);[m
+           console.log("Using local categories as fallback");[m
+           return localCategories;[m
+         }),[m
+[31m-        getAllVariations().catch(() => {[m
+[32m+[m[32m        getAllVariations(empresaId).catch((error) => { // Passa empresaId[m
+[32m+[m[32m          console.error("Erro ao buscar variações do Supabase:", error);[m
+           console.log("No variations found, using empty array");[m
+           return [];[m
+         }),[m
+[31m-        getAllVariationGroups().catch(() => {[m
+[32m+[m[32m        getAllVariationGroups(empresaId).catch((error) => { // Passa empresaId[m
+[32m+[m[32m          console.error("Erro ao buscar grupos de variação do Supabase:", error);[m
+           console.log("No variation groups found, using empty array");[m
+           return [];[m
+         })[m
+       ]);[m
+[31m-      [m
+[31m-      // Ensure all categories have valid IDs[m
+[32m+[m
+[32m+[m[32m      // Certifique-se de que os dados retornados pelo Supabase (ou fallback)[m
+[32m+[m[32m      // correspondem aos seus tipos antes de setar o estado.[m
+[32m+[m[32m      // Suas validações existentes são boas aqui.[m
+       const validCategories = cats.filter(cat => {[m
+         const isValid = cat && cat.id && typeof cat.id === 'string' && cat.id.trim() !== '';[m
+         if (!isValid) {[m
+[36m@@ -73,7 +102,6 @@[m [mconst Admin = () => {[m
+         return isValid;[m
+       });[m
+ [m
+[31m-      // Ensure all variations have valid IDs[m
+       const validVariations = vars.filter(variation => {[m
+         const isValid = variation && variation.id && typeof variation.id === 'string' && variation.id.trim() !== '';[m
+         if (!isValid) {[m
+[36m@@ -82,7 +110,6 @@[m [mconst Admin = () => {[m
+         return isValid;[m
+       });[m
+ [m
+[31m-      // Variation groups are already filtered in the service, but double-check[m
+       const validVariationGroups = groups.filter(group => {[m
+         const isValid = group && group.id && typeof group.id === 'string' && group.id.trim() !== '' && group.name && group.name.trim() !== '';[m
+         if (!isValid) {[m
+[36m@@ -90,30 +117,29 @@[m [mconst Admin = () => {[m
+         }[m
+         return isValid;[m
+       });[m
+[31m-      [m
+[32m+[m
+       console.log("Admin: Loaded items:", items.length, items);[m
+       console.log("Admin: Loaded valid categories:", validCategories.length, validCategories);[m
+       console.log("Admin: Loaded valid variations:", validVariations.length, validVariations);[m
+       console.log("Admin: Loaded valid variation groups (FINAL):", validVariationGroups.length, validVariationGroups);[m
+[31m-      [m
+[32m+[m
+       setMenuItems(items);[m
+       setCategories(validCategories);[m
+       setVariations(validVariations);[m
+       setVariationGroups(validVariationGroups);[m
+[31m-      [m
+[32m+[m
+       console.log("=== DADOS CARREGADOS E ESTADO ATUALIZADO ===");[m
+     } catch (error) {[m
+       console.error("Admin: Error loading data, using local fallback:", error);[m
+[31m-      // Complete fallback to local data with validation[m
+[31m-      const validLocalCategories = localCategories.filter(cat => [m
+[32m+[m[32m      const validLocalCategories = localCategories.filter(cat =>[m
+         cat && cat.id && typeof cat.id === 'string' && cat.id.trim() !== ''[m
+       );[m
+[31m-      [m
+[32m+[m
+       setMenuItems(localMenuItems);[m
+       setCategories(validLocalCategories);[m
+       setVariations([]);[m
+       setVariationGroups([]);[m
+[31m-      [m
+[32m+[m
+       toast({[m
+         title: "Aviso",[m
+         description: "Carregando dados locais. Algumas funcionalidades podem estar limitadas.",[m
+[36m@@ -124,46 +150,8 @@[m [mconst Admin = () => {[m
+     }[m
+   };[m
+ [m
+[31m-  // Seed data methods[m
+[31m-  const handleSeedData = async () => {[m
+[31m-    if (window.confirm("Isso irá importar os dados iniciais do menu. Continuar?")) {[m
+[31m-      try {[m
+[31m-        setLoading(true);[m
+[31m-        [m
+[31m-        console.log("Importing initial data...");[m
+[31m-        console.log("Categories to import:", localCategories.length);[m
+[31m-        console.log("Menu items to import:", localMenuItems.length);[m
+[31m-        [m
+[31m-        for (const category of localCategories) {[m
+[31m-          await import("@/services/categoryService").then(module => [m
+[31m-            module.saveCategory({...category, order: localCategories.indexOf(category)})[m
+[31m-          );[m
+[31m-        }[m
+[31m-        [m
+[31m-        for (const item of localMenuItems) {[m
+[31m-          await import("@/services/menuItemService").then(module => [m
+[31m-            module.saveMenuItem(item)[m
+[31m-          );[m
+[31m-        }[m
+[31m-        [m
+[31m-        toast({[m
+[31m-          title: "Sucesso",[m
+[31m-          description: "Dados iniciais importados com sucesso",[m
+[31m-        });[m
+[31m-        [m
+[31m-        await loadData();[m
+[31m-      } catch (error) {[m
+[31m-        console.error("Erro ao importar dados iniciais:", error);[m
+[31m-        toast({[m
+[31m-          title: "Erro",[m
+[31m-          description: "Não foi possível importar os dados iniciais. Tente novamente.",[m
+[31m-          variant: "destructive",[m
+[31m-        });[m
+[31m-      } finally {[m
+[31m-        setLoading(false);[m
+[31m-      }[m
+[31m-    }[m
+[31m-  };[m
+[32m+[m[32m  // REMOVEMOS A FUNÇÃO handleSeedData ANTIGA DAQUI, POIS ELA AGORA ESTÁ DENTRO DO SeedDataButton[m
+[32m+[m[32m  // const handleSeedData = async () => { ... }[m
+ [m
+   return ([m
+     <div className="min-h-screen bg-background">[m
+[36m@@ -174,9 +162,10 @@[m [mconst Admin = () => {[m
+             Gerenciamento do Cardápio[m
+           </h1>[m
+           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">[m
+[31m-            <SeedDataButton />[m
+[31m-            <Button [m
+[31m-              onClick={() => navigate("/")} [m
+[32m+[m[32m            {/* O NOVO SeedDataButton é renderizado aqui e já gerencia sua própria lógica */}[m
+[32m+[m[32m            <SeedDataButton onDataChange={loadData} /> {/* Passamos loadData para recarregar após o seed */}[m
+[32m+[m[32m            <Button[m
+[32m+[m[32m              onClick={() => navigate("/")}[m
+               variant="outline"[m
+               className="w-full sm:w-auto text-sm"[m
+             >[m
+[36m@@ -188,17 +177,18 @@[m [mconst Admin = () => {[m
+         {loading && <div className="text-center py-4 text-sm">Carregando dados...</div>}[m
+ [m
+         {/* Alerta para coleções vazias - mobile friendly */}[m
+[32m+[m[32m        {/* Este alerta precisará ser adaptado para "Coleções do Supabase Vazias" e a mensagem */}[m
+         {!loading && (menuItems.length === 0 || categories.length === 0) && ([m
+           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">[m
+             <div className="flex items-start gap-2 mb-2">[m
+               <Database className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0 mt-0.5" />[m
+               <h3 className="font-medium text-yellow-800 text-sm sm:text-base">[m
+[31m-                Coleções do Firebase Vazias[m
+[32m+[m[32m                Coleções do Supabase Vazias[m
+               </h3>[m
+             </div>[m
+             <p className="text-yellow-700 mb-3 text-xs sm:text-sm leading-relaxed">[m
+[31m-              Parece que as coleções do Firebase estão vazias ou foram excluídas. [m
+[31m-              Use o botão "Recriar Coleções Firebase" acima para restaurar todos os dados iniciais.[m
+[32m+[m[32m              Parece que as coleções do Supabase estão vazias para esta empresa.[m
+[32m+[m[32m              Use o botão "Importar Dados Iniciais Supabase" acima para popular o cardápio.[m
+             </p>[m
+             <p className="text-yellow-600 text-xs leading-relaxed">[m
+               Isso irá criar: categorias, itens do menu, variações e grupos de variações.[m
+[36m@@ -209,26 +199,26 @@[m [mconst Admin = () => {[m
+         {/* Tabs responsivas */}[m
+         <Tabs defaultValue="menu" value={activeTab} onValueChange={setActiveTab} className="w-full">[m
+           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 h-auto p-1">[m
+[31m-            <TabsTrigger [m
+[31m-              value="menu" [m
+[32m+[m[32m            <TabsTrigger[m
+[32m+[m[32m              value="menu"[m
+               className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-white"[m
+             >[m
+               Itens[m
+             </TabsTrigger>[m
+[31m-            <TabsTrigger [m
+[31m-              value="categories" [m
+[32m+[m[32m            <TabsTrigger[m
+[32m+[m[32m              value="categories"[m
+               className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-white"[m
+             >[m
+               Categorias[m
+             </TabsTrigger>[m
+[31m-            <TabsTrigger [m
+[31m-              value="variations" [m
+[32m+[m[32m            <TabsTrigger[m
+[32m+[m[32m              value="variations"[m
+               className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-white"[m
+             >[m
+               Variações[m
+             </TabsTrigger>[m
+[31m-            <TabsTrigger [m
+[31m-              value="groups" [m
+[32m+[m[32m            <TabsTrigger[m
+[32m+[m[32m              value="groups"[m
+               className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-white"[m
+             >[m
+               Grupos[m
+[36m@@ -237,7 +227,7 @@[m [mconst Admin = () => {[m
+ [m
+           <div className="w-full overflow-x-hidden">[m
+             <TabsContent value="menu" className="mt-0">[m
+[31m-              <MenuItemsTab [m
+[32m+[m[32m              <MenuItemsTab[m
+                 menuItems={menuItems}[m
+                 categories={categories}[m
+                 variations={variations}[m
+[36m@@ -248,25 +238,25 @@[m [mconst Admin = () => {[m
+             </TabsContent>[m
+ [m
+             <TabsContent value="categories" className="mt-0">[m
+[31m-              <CategoriesTab [m
+[32m+[m[32m              <CategoriesTab[m
+                 categories={categories}[m
+                 loading={loading}[m
+                 onDataChange={loadData}[m
+[31m-                onSeedData={handleSeedData}[m
+[32m+[m[32m                // onSeedData={handleSeedData} // REMOVIDO: A lógica de seed está no SeedDataButton[m
+               />[m
+             </TabsContent>[m
+ [m
+             <TabsContent value="variations" className="mt-0">[m
+[31m-              <VariationsTab [m
+[32m+[m[32m              <VariationsTab[m
+                 variations={variations}[m
+                 categories={categories}[m
+                 loading={loading}[m
+                 onDataChange={loadData}[m
+               />[m
+             </TabsContent>[m
+[31m-            [m
+[32m+[m
+             <TabsContent value="groups" className="mt-0">[m
+[31m-              <VariationGroupsTab [m
+[32m+[m[32m              <VariationGroupsTab[m
+                 variationGroups={variationGroups}[m
+                 variations={variations}[m
+                 loading={loading}[m
+[36m@@ -280,4 +270,4 @@[m [mconst Admin = () => {[m
+   );[m
+ };[m
+ [m
+[31m-export default Admin;[m
+[32m+[m[32mexport default Admin;[m
+\ No newline at end of file[m
+[1mdiff --git a/src/pages/AdminDashboard.tsx b/src/pages/AdminDashboard.tsx[m
+[1mindex 68cd66d..bb81be7 100644[m
+[1m--- a/src/pages/AdminDashboard.tsx[m
+[1m+++ b/src/pages/AdminDashboard.tsx[m
+[36m@@ -176,7 +176,7 @@[m [mconst AdminDashboard = () => {[m
+             </div>[m
+             <CardTitle className="text-xl">Gerenciar Entregadores</CardTitle>[m
+             <CardDescription>[m
+[31m-              Visualize, ative/desative e adicione entregadores[m
+[32m+[m[32m              Cadastre, Visualize, Edite, Ative ou Desative Entregadores[m
+             </CardDescription>[m
+           </CardHeader>[m
+           <CardContent>[m
+[36m@@ -191,6 +191,25 @@[m [mconst AdminDashboard = () => {[m
+         </Card>[m
+         {/* FIM DO NOVO CARD */}[m
+ [m
+[32m+[m[32m        {/* NOVO CARD: Pedidos em rota de entrega */}[m
+[32m+[m[32m        <Card className="hover:shadow-lg transition-shadow cursor-pointer">[m
+[32m+[m[32m          <CardHeader className="text-center">[m
+[32m+[m[32m            <div className="mx-auto mb-4 p-3 bg-blue-100 rounded-full w-fit">[m
+[32m+[m[32m              <Truck className="h-8 w-8 text-blue-600" />[m
+[32m+[m[32m            </div>[m
+[32m+[m[32m            <CardTitle className="text-xl">Pedidos em Rota de Entrega</CardTitle>[m
+[32m+[m[32m            <CardDescription>[m
+[32m+[m[32m              Visualize aqui todos os pedidos ainda não finalizados/entregues[m
+[32m+[m[32m            </CardDescription>[m
+[32m+[m[32m          </CardHeader>[m
+[32m+[m[32m          <CardContent>[m
+[32m+[m[32m            <Button asChild className="w-full">[m
+[32m+[m[32m              <Link to="/entregador">Ver Pedidos</Link>[m
+[32m+[m[32m            </Button>[m
+[32m+[m[32m          </CardContent>[m
+[32m+[m[32m        </Card>[m
+[32m+[m		[32m{/* FIM DO NOVO CARD */}[m
+[32m+[m[41m		[m
+       </div>[m
+ [m
+ [m
