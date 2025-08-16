@@ -26,6 +26,7 @@ import AdminCupons from "@/pages/AdminCupons";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import { EmpresaProvider } from "@/contexts/EmpresaContext";
+import AuthRedirectHandler from "@/components/layout/AuthRedirectHandler"; // <-- Importe o componente aqui
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <AuthRedirectHandler /> {/* <-- Adicione o componente aqui, fora do <Routes> */}
             <Routes>
               {/* Rotas públicas */}
               <Route path="/login" element={<Login />} />
@@ -78,7 +80,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/unauthorized" element={<NotFound />} /> {/* Ou uma página de "Acesso Negado" */}
+              <Route path="/unauthorized" element={<NotFound />} />
 
               {/* Rota inicial que usa AppLayout */}
               <Route
@@ -124,7 +126,7 @@ const App = () => (
               <Route
                 path="/orders"
                 element={
-                  <PrivateRoute> {/* Esta rota aceita qualquer usuário logado */}
+                  <PrivateRoute>
                     <AppLayout>
                       <Orders />
                     </AppLayout>
