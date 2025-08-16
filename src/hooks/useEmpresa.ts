@@ -23,13 +23,13 @@ export function useEmpresa(userId: string | null) {
       }
 
       try {
-        // Passo 1: Buscar o perfil do usuário para obter o empresa_id
+        // Passo 1: Buscar o perfil do usuário na tabela 'usuarios' para obter o empresa_id
         console.log("useEmpresa: Buscando empresaId para o usuário:", userId);
         const { data: userData, error: userError } = await supabase
           .from("usuarios")
-          .select("empresa_id") // Seleciona apenas o campo empresa_id
+          .select("empresa_id")
           .eq("id", userId)
-          .maybeSingle(); // Usa maybeSingle para não quebrar se não encontrar
+          .maybeSingle();
 
         if (userError) {
           throw userError;
@@ -50,7 +50,7 @@ export function useEmpresa(userId: string | null) {
           .from("empresas")
           .select("*")
           .eq("id", empresaId)
-          .single(); // single() é seguro aqui, pois empresa_id é uma chave primária
+          .single();
 
         if (empresaError) {
           throw empresaError;
