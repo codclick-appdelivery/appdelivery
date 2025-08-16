@@ -1,50 +1,79 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient"; // Ajustado para usar supabaseClient
+import { supabase } from "@/lib/supabaseClient";
 
 interface Empresa {
   id: string;
   nome: string;
   admin_id: string;
-  // Adicione outras propriedades da sua tabela 'empresas' aqui, se houver
 }
 
 export function useEmpresa(userId: string | null) {
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
-  const [loading, setLoading] = useState(true); // Adicionado estado de loading
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEmpresa = async () => {
-      setLoading(true); // Inicia o loading
+      setLoading(true);
 
       if (!userId) {
         console.log("useEmpresa: userId é nulo, não buscando empresa.");
         setEmpresa(null);
-        setLoading(false); // Finaliza o loading se userId for nulo
+        setLoading(false);
         return;
       }
 
-      console.log("useEmpresa: Buscando empresa para userId:", userId);
-      const { data, error } = await supabase
-        .from("empresas")
-        .select("*")
-        .eq("admin_id", userId)
-        .single();
+      try {
+        // Passo 1: Buscar o perfil do usuário para obter o empresa_id
+        console.log("useEmpresa: Buscando empresaId para o usuário:", userId);
+        const { data: userData, error: userError } = await supabase
+          .from("usuarios")
+          .select("empresa_id") // Seleciona apenas o campo empresa_id
+          .eq("id", userId)
+          .maybeSingle(); // Usa maybeSingle para não quebrar se não encontrar
 
-      if (error) {
-        console.error("useEmpresa: Erro ao buscar empresa:", error.message);
-        setEmpresa(null); // Garante que empresa seja null em caso de erro
-      } else if (data) {
-        setEmpresa(data as Empresa);
-        console.log("useEmpresa: Empresa encontrada:", data);
-      } else {
-        setEmpresa(null); // Se não houver dados, define como null
-        console.log("useEmpresa: Nenhuma empresa encontrada para userId:", userId);
+        if (userError) {
+          throw userError;
+        }
+
+        if (!userData || !userData.empresa_id) {
+          console.log("useEmpresa: Nenhum empresa_id encontrado para o usuário:", userId);
+          setEmpresa(null);
+          setLoading(false);
+          return;
+        }
+
+        const empresaId = userData.empresa_id;
+        console.log("useEmpresa: empresa_id encontrado:", empresaId);
+
+        // Passo 2: Usar o empresa_id para buscar os dados completos da empresa
+        const { data: empresaData, error: empresaError } = await supabase
+          .from("empresas")
+          .select("*")
+          .eq("id", empresaId)
+          .single(); // single() é seguro aqui, pois empresa_id é uma chave primária
+
+        if (empresaError) {
+          throw empresaError;
+        }
+
+        if (empresaData) {
+          setEmpresa(empresaData as Empresa);
+          console.log("useEmpresa: Dados da empresa encontrados:", empresaData);
+        } else {
+          setEmpresa(null);
+          console.log("useEmpresa: Nenhum dado de empresa encontrado para o id:", empresaId);
+        }
+
+      } catch (err: any) {
+        console.error("useEmpresa: Erro ao buscar empresa:", err.message);
+        setEmpresa(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false); // Finaliza o loading
     };
 
     fetchEmpresa();
   }, [userId]);
 
-  return { empresa, loading }; // Retorna o estado de loading
+  return { empresa, loading };
 }
