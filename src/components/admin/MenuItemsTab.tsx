@@ -7,6 +7,7 @@ import { Edit, Plus, Trash2, ChevronDown, ChevronUp, AlertTriangle, RefreshCw } 
 import { useToast } from "@/hooks/use-toast";
 import { deleteMenuItem, cleanupPopularItems } from "@/services/menuItemService";
 import { EditMenuItemModal } from "./EditMenuItemModal";
+import { getSupabaseImageUrl } from "@/lib/utils"; 
 
 interface MenuItemsTabProps {
   menuItems: MenuItem[];
