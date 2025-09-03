@@ -1,12 +1,17 @@
-
 import React from "react";
 
-const RestaurantHeader: React.FC = () => {
+interface RestaurantHeaderProps {
+  nome?: string;
+  logo_url?: string;
+}
+
+const RestaurantHeader: React.FC<RestaurantHeaderProps> = ({ nome, logo_url }) => {
   return (
     <div className="relative">
       <div className="h-48 sm:h-64 w-full bg-gradient-to-r from-brand-700 to-brand overflow-hidden">
+        {/* Usando uma imagem de banner estática, pois a busca é apenas para o logo */}
         <img
-          src="https://crm-kappa-woad.vercel.app/logo_best_burger_2.png"
+          src="/images/restaurant-banner.jpg"
           alt="Sabor Delivery Fácil"
           className="w-full h-full object-cover mix-blend-overlay opacity-50"
           onError={(e) => {
@@ -19,18 +24,29 @@ const RestaurantHeader: React.FC = () => {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex flex-col sm:flex-row items-center">
             <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md mr-0 sm:mr-6 mb-4 sm:mb-0">
-              <img
-                src="/images/logo_delivery_2.png"
-                alt="Logo"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/placeholder.svg";
-                }}
-              />
+              {/* Agora o logo é dinâmico, vindo do banco de dados */}
+              {logo_url ? (
+                <img
+                  src={logo_url}
+                  alt={`Logo do ${nome}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/placeholder.svg";
+                  }}
+                />
+              ) : (
+                // Se não houver logo_url, use um placeholder ou o logo estático original
+                <img
+                  src="/images/logo_delivery_2.png"
+                  alt="Logo"
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             <div className="text-center sm:text-left">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">App Delivery</h1>
+              {/* O nome do restaurante agora é dinâmico */}
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">{nome || "Sabor Delivery Fácil"}</h1>
               <p className="text-gray-600 mt-1">Delivery Facil e Rápido</p>
               <p className="text-gray-600 mt-1"><b>Sua Plataforma de Delivery</b></p>
               <div className="flex items-center justify-center sm:justify-start mt-2">
